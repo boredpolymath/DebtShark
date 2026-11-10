@@ -1,0 +1,15 @@
+{
+  "name": "DebtShark — Private debt organizer",
+  "short_name": "DebtShark",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f3838",
+  "theme_color": "#0f3838",
+  "description": "Private, local-only loan organization and borrower-protection education tools.",
+  "icons": [
+    { "src": "assets/debtshark-check-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/debtshark-check-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

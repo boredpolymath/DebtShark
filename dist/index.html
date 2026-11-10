@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f3838" />
+    <meta name="description" content="DebtShark is a private, local-only loan organizer and borrower-protection education tool." />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/debtshark-check-32.png?v=4" />
+    <link rel="apple-touch-icon" sizes="512x512" href="./assets/debtshark-check-512.png?v=4" />
+    <link rel="stylesheet" href="./styles.css?v=release-v1" />
+    <title>DebtShark</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary navigation">
+        <a class="brand" href="#analyzer" aria-label="DebtShark home">
+          <img class="brand-lockup" src="./assets/debtshark-lockup-original.png" alt="DebtShark" />
+        </a>
+        <nav class="nav-list">
+          <button class="nav-link active" data-view="analyzer" aria-current="page"><span>01</span>Review</button>
+          <button class="nav-link" data-view="manage"><span>02</span>Repay</button>
+          <button class="nav-link" data-view="monitor"><span>03</span>Track</button>
+          <button class="nav-link" data-view="resolve"><span>04</span>Resolve</button>
+          <button class="nav-link" data-view="learning"><span>05</span>Rights</button>
+          <button class="nav-link" data-view="saved"><span>06</span>Records <b id="saved-count" hidden>0</b></button>
+        </nav>
+        <div class="rail-bottom">
+          <div class="local-status"><i></i> Saved locally</div>
+          <button class="install-button" id="install-app" type="button" hidden>Install app <span aria-hidden="true">↓</span></button>
+        </div>
+      </aside>
+
+      <main>
+        <section class="view active" id="analyzer">
+          <div class="intro-row">
+            <div>
+              <p class="eyebrow">OFFER REVIEW</p>
+              <h1>See the full picture<br>before you borrow.</h1>
+              <p class="lead">Enter the terms you were offered. We’ll calculate the actual cost and flag details worth a closer look.</p>
+            </div>
+          </div>
+
+          <div class="analysis-grid">
+            <section class="offer-workspace">
+            <form class="offer-form" id="loan-form">
+              <div class="card-heading"><div><p class="eyebrow">LOAN DETAILS</p></div><button type="button" class="text-button" id="load-sample">Use example</button></div>
+              <div class="form-section">
+                <p class="form-section-label">AMOUNT &amp; REPAYMENT</p>
+                <div class="form-pair">
+                  <label class="slider-field"><span>Loan amount <output id="amount-value">$12,500</output></span><input id="amount" type="range" min="1000" max="100000" step="500" value="12500"></label>
+                  <label class="slider-field"><span>Loan term <output id="term-value">60 months</output></span><input id="term" type="range" min="12" max="120" step="12" value="60"></label>
+                </div>
+              </div>
+              <div class="form-section">
+                <p class="form-section-label">RATE &amp; COST</p>
+                <div class="form-pair">
+                  <label class="slider-field"><span>Interest rate (APR) <output id="apr-value">15.99%</output></span><input id="apr" type="range" min="0" max="36" step="0.01" value="15.99"></label>
+                  <label class="slider-field"><span>Upfront fees <output id="fees-value">$895</output></span><input id="fees" type="range" min="0" max="10000" step="5" value="895"></label>
+                </div>
+              </div>
+              <fieldset>
+                <legend>Offer features</legend>
+                <label class="check"><input id="refinance" type="checkbox"><span> This replaces or extends an existing loan</span></label>
+                <label class="check"><input id="balloon" type="checkbox"><span> Includes a balloon payment</span></label>
+                <label class="check"><input id="auto-pay" type="checkbox"><span> Rate requires automatic payments</span></label>
+              </fieldset>
+              <button class="button primary" type="submit">Review this offer <span>→</span></button>
+            </form>
+
+            <section class="results" aria-live="polite">
+              <div class="financial-snapshot">
+              <div class="result-hero">
+                <div class="result-header"><p class="eyebrow">ESTIMATED MONTHLY PAYMENT</p><span class="tag" id="risk-label">REVIEW</span></div>
+                <p class="payment" id="monthly-payment">$243<span>.09</span></p>
+                <div class="metric-row"><div><span>Total paid</span><strong id="total-paid">$14,585</strong></div><div><span>Interest</span><strong id="interest-paid">$2,085</strong></div><div><span>Upfront fees</span><strong id="fee-paid">$895</strong></div></div>
+              </div>
+              <div class="snapshot-divider"></div>
+              <div class="breakdown">
+                <div class="card-heading"><div><p class="eyebrow">COST BREAKDOWN</p><h2>Where your money goes</h2></div></div>
+                <div class="bar-chart"><div class="principal-bar" id="principal-bar"></div><div class="interest-bar" id="interest-bar"></div></div>
+                <div class="chart-labels">
+                  <div class="chart-label chart-principal"><span>Amount borrowed</span><strong id="principal-label">$12,500</strong></div>
+                  <div class="chart-label chart-cost"><span>Interest + fees</span><strong id="cost-label">$2,980</strong></div>
+                </div>
+              </div>
+              </div>
+            </section>
+            </section>
+          </div>
+
+          <section class="compare-inline" aria-label="Compare another loan offer">
+            <div class="compare-inline-header">
+              <div><p class="eyebrow">COMPARE ANOTHER OFFER</p><h2>See a second offer side-by-side.</h2></div>
+              <button class="button secondary" type="button" id="toggle-comparison">Add comparison offer <span>+</span></button>
+            </div>
+            <div class="comparison-body" id="comparison-body" hidden>
+              <div class="compare-grid">
+                <article class="compare-card card"><p class="eyebrow">YOUR CURRENT OFFER</p><h2 id="offer-name">Offer A</h2><strong id="compare-current-payment">$243/mo</strong><dl><dt>APR</dt><dd id="compare-current-apr">15.99%</dd><dt>Total cost</dt><dd id="compare-current-cost">$14,585</dd><dt>Term</dt><dd id="compare-current-term">60 months</dd></dl></article>
+                <form class="compare-card card alt" id="comparison-form"><p class="eyebrow">ALTERNATIVE OFFER</p><label>Loan amount <input id="alt-amount" type="number" value="12500"></label><label>APR <input id="alt-apr" type="number" step="0.01" value="10.49"></label><label>Term (months) <input id="alt-term" type="number" value="48"></label><button class="button primary" type="submit">Compare offers <span>→</span></button></form>
+                <article class="difference card dark-card"><p class="eyebrow">POTENTIAL DIFFERENCE</p><strong id="savings">$1,010</strong><p id="savings-copy">less in total borrowing cost with the alternative offer.</p><div class="tip">Compare the total cost and term together. A lower payment can still mean more interest over time.</div></article>
+              </div>
+            </div>
+          </section>
+
+          <section class="flags-section">
+            <div class="section-title"><div><p class="eyebrow">WHAT TO CHECK</p><h2>Items worth your attention</h2></div><p id="flag-summary">Based on the terms entered, review these before agreeing.</p></div>
+            <div class="flags" id="flags"></div>
+          </section>
+
+          <section class="next-steps card">
+            <div><h2>Questions to ask</h2></div>
+            <ol><li>Is this the lowest APR I qualify for?</li><li>Which fees are optional, and which are financed?</li><li>How much more will I pay if I refinance or pay late?</li></ol>
+            <button class="button secondary" id="save-analysis">Save analysis <span>+</span></button>
+          </section>
+        </section>
+
+        <section class="view" id="manage">
+          <div class="intro-row compact"><div><p class="eyebrow">REPAYMENT</p><h1>Keep your loan<br>on your terms.</h1><p class="lead">Track the remaining balance, payment amount, and projected payoff date. Entries are stored only on this device.</p></div></div>
+          <div class="manage-grid">
+            <section class="servicing-controls card">
+              <p class="eyebrow">LOAN SETTINGS</p>
+              <div class="manage-fields">
+                <label>Remaining balance <input id="servicing-balance" type="number" min="0" step="100" value="9800"></label>
+                <label>Interest rate (APR) <input id="servicing-apr" type="number" min="0" max="99" step="0.01" value="15.99"></label>
+                <label>Monthly payment <input id="servicing-payment" type="number" min="1" step="10" value="300"></label>
+                <label>Next due date <input id="servicing-due" type="date"></label>
+              </div>
+              <p class="local-note">This is a planning estimate, not your lender’s official payoff quote.</p>
+            </section>
+            <section class="payoff-card dark-card">
+              <p class="eyebrow">PAYOFF OUTLOOK</p>
+              <div class="payoff-number"><strong id="payoff-months">41</strong><span>months remaining</span></div>
+              <div class="payoff-metrics"><div><span>Projected payoff</span><strong id="payoff-date">Sep 2029</strong></div><div><span>Estimated interest left</span><strong id="remaining-interest">$2,349</strong></div></div>
+              <div class="balance-track"><span id="balance-fill"></span></div><p class="balance-caption"><span>Current balance</span><strong id="balance-caption">$9,800</strong></p>
+            </section>
+          </div>
+          <section class="payment-log card">
+            <div class="card-heading"><div><p class="eyebrow">PAYMENT PLAN</p><h2>Your next actions</h2></div><div class="card-actions"><button class="button secondary compact-button" id="save-repayment" type="button">Save snapshot</button><button class="button primary compact-button" id="mark-payment">Mark payment made <span>✓</span></button></div></div>
+            <div class="payment-steps"><article><span>1</span><div><strong id="next-due-label">Next payment</strong><p id="next-due-detail">Set a due date to start your repayment plan.</p></div></article><article><span>2</span><div><strong>Keep a confirmation</strong><p>Save a receipt or confirmation number after each payment.</p></div></article><article><span>3</span><div><strong>Review changes</strong><p>Log fees, rate changes, or contact from the lender in Track.</p></div></article></div>
+          </section>
+        </section>
+
+        <section class="view" id="monitor">
+          <div class="intro-row compact"><div><p class="eyebrow">LOAN TIMELINE</p><h1>Keep a clear record<br>of what changes.</h1><p class="lead">Log fees, lender messages, payment issues, and other events as they happen.</p></div></div>
+          <section class="track-command-card" aria-label="Timeline overview">
+            <div class="track-next">
+              <p class="eyebrow">NEXT UP</p>
+              <h2 id="track-next-title">Nothing needs attention yet.</h2>
+              <p id="track-next-copy">Add an event when something happens, or save an optional reminder for yourself.</p>
+              <details class="follow-up-details"><summary>Add an optional reminder <b aria-hidden="true">↓</b></summary><form id="followup-form"><label>What would you like to remember? <input id="followup-note" placeholder="For example: Call the servicer"></label><label>Date to remember <input id="followup-date" type="date"></label><button class="button secondary compact-button" type="submit">Save reminder</button></form></details>
+            </div>
+            <div class="track-summary" aria-live="polite"><p class="eyebrow">YOUR RECORD</p><strong id="track-event-count">0 events</strong><p id="track-event-copy">A simple, dated record can make later conversations easier.</p><small>This tool does not calculate legal or response deadlines.</small></div>
+          </section>
+          <div class="monitor-grid">
+            <form class="event-form card" id="event-form"><p class="eyebrow">ADD AN EVENT</p><h2>Add a timeline entry.</h2><p class="form-helper">Keep it simple: choose a type, add a date, and record the facts you want to remember.</p><p class="event-step">01 / CHOOSE A TYPE</p><div class="event-presets" aria-label="Choose an event type"><button type="button" data-event-type="Payment" aria-pressed="true">Payment</button><button type="button" data-event-type="Message" aria-pressed="false">Message</button><button type="button" data-event-type="Fee" aria-pressed="false">Fee</button><button type="button" data-event-type="Document" aria-pressed="false">Document</button></div><p class="event-step">02 / ADD THE FACTS</p><label>Event type <select id="event-type"><option>Payment</option><option>Message</option><option>Fee</option><option>Document</option><option>Loan change</option><option>Other</option></select></label><label>Date <input id="event-date" type="date"></label><label>What happened? <textarea id="event-note" rows="4" placeholder="Describe the event in your own words."></textarea></label><details class="event-more"><summary>Add a document or reference <small>(optional)</small></summary><label>Reference or document <input id="event-reference" placeholder="For example: email confirmation #1234"></label></details><button class="button primary" type="submit">Add to timeline <span>+</span></button></form>
+            <section class="timeline-card card"><div class="card-heading"><div><p class="eyebrow">YOUR TIMELINE</p><h2>What you have recorded</h2></div><div class="card-actions"><button class="text-button" id="save-timeline" type="button">Save snapshot</button><button class="text-button" id="clear-events" type="button">Clear timeline</button></div></div><div class="timeline-filters" role="group" aria-label="Filter timeline"><button type="button" class="active" data-event-filter="all" aria-pressed="true">All</button><button type="button" data-event-filter="Payment" aria-pressed="false">Payments</button><button type="button" data-event-filter="Message" aria-pressed="false">Messages</button><button type="button" data-event-filter="Fee" aria-pressed="false">Fees</button><button type="button" data-event-filter="Document" aria-pressed="false">Documents</button></div><div class="event-list" id="event-list"></div></section>
+          </div>
+        </section>
+
+        <section class="view" id="resolve">
+          <div class="intro-row compact"><div><p class="eyebrow">RESOLVE A CONCERN</p><h1>Build a clear case<br>one step at a time.</h1><p class="lead">Keep your facts, records, and next steps together. Everything stays on this device unless you export it.</p></div></div>
+          <section class="resolve-roadmap" aria-label="Case workspace steps"><article><span>01</span><strong>Set up</strong><p>Name the concern and outcome.</p></article><article><span>02</span><strong>Record</strong><p>Keep documents and contacts together.</p></article><article><span>03</span><strong>Review</strong><p>Track dates you enter.</p></article><article><span>04</span><strong>Prepare</strong><p>Create and export a factual packet.</p></article></section>
+          <div class="resolve-grid">
+            <form class="case-setup card" id="case-setup-form"><p class="eyebrow">01 / CASE SETUP</p><h2>Start with the essentials.</h2><div class="case-fields"><label>Issue type <select id="case-issue"><option>Billing or fee concern</option><option>Payment or account issue</option><option>Loan terms or disclosure concern</option><option>Collection contact</option><option>Other concern</option></select></label><label>Company or servicer <input id="case-company" autocomplete="organization" placeholder="Company name"></label><label>Account reference <input id="case-reference" placeholder="Optional reference"></label><label>What outcome do you want? <input id="case-outcome" placeholder="For example: a written review"></label></div><p class="local-note">You decide what to enter. This is a private organizer, not legal advice.</p></form>
+            <form class="concern-card card" id="concern-form"><p class="eyebrow">04 / PREPARE A FACTUAL DRAFT</p><h2>Explain what happened.</h2><label>Facts to include <textarea id="concern-note" rows="6" placeholder="State what happened, when it happened, and what you are asking for."></textarea></label><button class="button primary" type="submit">Create factual draft <span>→</span></button></form>
+          </div>
+          <details class="resolve-panel"><summary><span>02</span><div><strong>Organize evidence and contacts</strong><small>Add document references and a dated communication log.</small></div><b aria-hidden="true">↓</b></summary><div class="resolve-panel-body resolve-work-grid"><form class="resolve-mini-form" id="evidence-form"><p class="eyebrow">DOCUMENT INVENTORY</p><label>Document name <input id="evidence-name" placeholder="For example: April statement"></label><label>Source or location <input id="evidence-source" placeholder="For example: email from company"></label><label>Date on document <input id="evidence-date" type="date"></label><button class="button secondary compact-button" type="submit">Add document</button></form><section class="resolve-list-card"><div class="card-heading"><div><p class="eyebrow">SAVED DOCUMENTS</p><h3>What you have</h3></div></div><div id="evidence-list" class="resolve-list"></div></section><form class="resolve-mini-form" id="contact-form"><p class="eyebrow">CONTACT LOG</p><label>Date <input id="contact-date" type="date"></label><label>Method <select id="contact-method"><option>Phone call</option><option>Email</option><option>Letter</option><option>Secure message</option><option>In person</option></select></label><label>Who you spoke with <input id="contact-person" placeholder="Name or department"></label><label>What happened <textarea id="contact-note" rows="3" placeholder="Include any confirmation or reference number."></textarea></label><button class="button secondary compact-button" type="submit">Add contact</button></form><section class="resolve-list-card"><div class="card-heading"><div><p class="eyebrow">SAVED CONTACTS</p><h3>Communication history</h3></div></div><div id="contact-list" class="resolve-list"></div></section></div></details>
+          <details class="resolve-panel"><summary><span>03</span><div><strong>Track dates and choose a next step</strong><small>Keep dates you enter visible; this tool does not calculate legal deadlines.</small></div><b aria-hidden="true">↓</b></summary><div class="resolve-panel-body resolve-work-grid"><form class="resolve-mini-form" id="deadline-form"><p class="eyebrow">YOUR DATE TRACKER</p><label>What needs attention? <input id="deadline-title" placeholder="For example: respond to company"></label><label>Date to remember <input id="deadline-date" type="date"></label><button class="button secondary compact-button" type="submit">Add date</button></form><section class="resolve-list-card"><div class="card-heading"><div><p class="eyebrow">YOUR DATES</p><h3>Upcoming items</h3></div></div><div id="deadline-list" class="resolve-list"></div></section><section class="next-step-card"><p class="eyebrow">CHOOSE A NEXT STEP</p><h3>Use your record when you are ready.</h3><div class="next-step-links"><button type="button" class="text-button" id="go-monitor">Review your timeline →</button><button type="button" class="text-button" id="go-protect">Read your rights guidance →</button><a href="https://www.consumerfinance.gov/complaint/" target="_blank" rel="noreferrer">Visit the CFPB complaint tool →</a></div></section></div></details>
+          <section class="summary-output card" id="summary-output" hidden><p class="eyebrow">YOUR FACTUAL DRAFT</p><p id="summary-text"></p><small>Review and personalize this draft before sharing it. It is an organizer, not a dispute letter, court response, or legal advice.</small><div class="card-actions"><button class="button secondary compact-button" id="save-summary" type="button">Save draft</button><button class="button secondary compact-button" id="save-case-workspace" type="button">Save case</button><button class="button primary compact-button" id="export-case-packet" type="button">Export packet <span>↓</span></button></div></section>
+        </section>
+
+        <section class="view" id="learning">
+          <div class="intro-row compact"><div><p class="eyebrow">YOUR RIGHTS</p><h1>Know your options<br>before you act.</h1><p class="lead">Plain-language guidance for asking better questions. Rules vary by loan and location.</p></div></div>
+          <div class="rights-section-heading"><div><p class="eyebrow">01 / BEFORE THERE IS A PROBLEM</p><h2>Build confidence with the basics.</h2></div><p>Use these ideas when reviewing an offer or checking an account. They make it easier to spot questions worth asking early.</p></div>
+          <div class="learn-grid">
+            <article><span>01</span><h2>APR isn’t the whole story</h2><p>APR helps compare credit costs, but review every fee, whether it is financed, and the total paid over the full term.</p></article>
+            <article><span>02</span><h2>Watch the clock</h2><p>Extending a term may lower a monthly payment while increasing how long you are in debt and what you pay overall.</p></article>
+            <article><span>03</span><h2>Keep the paperwork</h2><p>Save the offer, disclosures, messages, and notes about conversations. They make it easier to check terms later.</p></article>
+            <article><span>04</span><h2>Pause on pressure</h2><p>Be cautious of claims that an offer expires immediately. Take time to read the disclosures and seek independent help if needed.</p></article>
+          </div>
+          <section class="rights-mobile-routes" aria-label="Rights guides">
+            <button class="rights-mobile-route collections-route" type="button" data-rights-detail="collections-detail"><span>02 / COLLECTIONS SUPPORT</span><strong>Collections &amp; action kit</strong><small>Review the facts, build your record, and choose a next step.</small><b aria-hidden="true">→</b></button>
+          </section>
+          <div class="collections-workspace">
+          <section class="collections-guide">
+            <details class="rights-disclosure" data-rights-disclosure open>
+              <summary><div class="collections-heading"><div><p class="eyebrow">02 / IF A LOAN GOES TO COLLECTIONS</p><h2>Start with the facts, deadlines, and records.</h2></div><p>General U.S. consumer information—not individualized legal advice. Rules and deadlines can vary.</p></div><span class="rights-disclosure-toggle" aria-hidden="true">View guide <b>↓</b></span></summary>
+              <div class="rights-disclosure-content collections-steps">
+              <article><span>01</span><h3>Verify the contact</h3><p>Ask for the collector’s name and contact information, the creditor, the account, and the amount claimed. Avoid sharing sensitive financial information until you can confirm who is contacting you.</p><a href="https://www.consumerfinance.gov/ask-cfpb/what-should-i-do-when-a-debt-collector-contacts-me-en-1695/" target="_blank" rel="noreferrer">CFPB: When a collector contacts you →</a></article>
+              <article><span>02</span><h3>Review and keep records</h3><p>Keep the validation notice, letters, payment records, and dated notes of calls. If you believe the debt or amount is wrong, consider disputing it in writing and review the notice for its deadline.</p><a href="https://www.consumerfinance.gov/ask-cfpb/how-do-i-get-a-debt-collector-to-stop-contacting-me-en-1411/" target="_blank" rel="noreferrer">CFPB: Disputes and contact limits →</a></article>
+              <article><span>03</span><h3>Do not ignore court papers</h3><p>If you are sued, read the papers and respond by the deadline shown. Responding does not mean you agree that the debt is valid; it preserves your ability to raise issues with the court.</p><a href="https://www.consumerfinance.gov/ask-cfpb/what-should-i-do-if-im-sued-by-a-debt-collector-or-creditor-en-334/" target="_blank" rel="noreferrer">CFPB: If you are sued →</a></article>
+              </div>
+            </details>
+          </section>
+          <section class="rights-action-kit" aria-labelledby="action-kit-title">
+            <details class="rights-disclosure" data-rights-disclosure open>
+              <summary><div class="action-kit-heading"><div><p class="eyebrow">03 / PRACTICAL ACTION KIT</p><h2 id="action-kit-title">Build a clear record before you respond.</h2></div><p>Keep originals for yourself. This workspace helps organize facts; it does not send notices or replace advice from a lawyer or legal-aid organization.</p></div><span class="rights-disclosure-toggle" aria-hidden="true">Open toolkit <b>↓</b></span></summary>
+              <div class="rights-disclosure-content">
+            <ol class="action-path" aria-label="Record-building sequence"><li><span>01</span>Gather copies</li><li><span>02</span>Write down facts</li><li><span>03</span>Choose a next step</li></ol>
+            <div class="action-kit-grid">
+              <section class="evidence-packet card">
+                <p class="eyebrow">EVIDENCE PACKET</p>
+                <h3>Gather copies, not originals.</h3>
+                <label class="check"><input type="checkbox"> Validation notice, collection letters, and envelopes</label>
+                <label class="check"><input type="checkbox"> Contract, disclosures, and account statements</label>
+                <label class="check"><input type="checkbox"> Payment receipts, cancelled checks, or settlement records</label>
+                <label class="check"><input type="checkbox"> Dated notes of calls, emails, texts, and names used</label>
+                <label class="check"><input type="checkbox"> Court papers and every deadline, if you were served</label>
+                <button class="text-button action-link" id="open-resolve" type="button">Open your evidence workspace →</button>
+              </section>
+              <form class="collection-record card" id="collection-record-form">
+                <div><p class="eyebrow">MAKE A FACTUAL RECORD</p><h3>Write a short, neutral case note.</h3><p>Capture what happened in your own words. You can use it to organize a file, talk with a counselor, or prepare information for an official complaint.</p></div>
+                <div class="collection-record-fields"><label>Collector or company <input id="collection-company" autocomplete="organization" placeholder="Company name"></label><label>First contact date <input id="collection-contact-date" type="date"></label><label class="record-notes">Facts to preserve <textarea id="collection-facts" rows="5" placeholder="Dates, amounts, what was said or sent, and any document names."></textarea></label><button class="button primary" type="submit">Create factual record <span>→</span></button></div>
+              </form>
+            </div>
+            <section class="response-routes card">
+              <div><p class="eyebrow">CHOOSE A NEXT STEP</p><h3>Use an official route.</h3></div>
+              <div class="route-list"><a class="route-link" href="https://www.consumerfinance.gov/consumer-tools/debt-collection/" target="_blank" rel="noreferrer"><span>Find CFPB response tools and sample letters</span><b>→</b></a><a class="route-link" href="https://www.consumerfinance.gov/complaint/" target="_blank" rel="noreferrer"><span>Prepare a CFPB complaint with key facts and documents</span><b>→</b></a><a class="route-link" href="https://www.consumerfinance.gov/ask-cfpb/what-should-i-do-if-im-sued-by-a-debt-collector-or-creditor-en-334/" target="_blank" rel="noreferrer"><span>Read the court-response guidance if you were sued</span><b>→</b></a></div>
+            </section>
+            <section class="collection-record-output card" id="collection-record-output" hidden aria-live="polite"><p class="eyebrow">YOUR DRAFT RECORD</p><p id="collection-record-text"></p><small>Review for accuracy before using it. This is a personal factual record—not a dispute letter, court response, or legal advice.</small><button class="button secondary compact-button" id="save-collection-record" type="button">Save to Records</button></section>
+              </div>
+            </details>
+          </section>
+          </div>
+        </section>
+
+        <section class="view rights-detail-view" id="collections-detail">
+          <div id="collections-detail-slot"></div>
+          <button class="text-button rights-back" type="button" data-rights-back>← Back to Rights</button>
+        </section>
+
+        <section class="view" id="saved">
+          <div class="intro-row compact"><div><p class="eyebrow">YOUR RECORDS</p><h1>Your saved records.</h1><p class="lead">Save only what you choose to keep. These records stay in this browser until you delete them.</p></div><button class="text-button saved-clear" id="clear-data">Clear local data</button></div>
+          <section class="privacy-note" aria-label="Local data and privacy"><strong>Private by design</strong><span>DebtShark has no accounts, analytics, or servers. Your entries stay in this browser on this device. Clearing browser data or changing devices removes them unless you export a copy yourself.</span></section>
+          <div id="saved-list" class="saved-list"></div>
+        </section>
+      </main>
+    </div>
+    <footer class="site-disclaimer">
+      <div><strong>Educational tool.</strong><span>Planning support only — not legal or financial advice.</span></div>
+    </footer>
+    <div class="legal-modal" id="legal-modal" role="dialog" aria-modal="true" aria-labelledby="legal-modal-title" aria-describedby="legal-modal-copy" hidden>
+      <section class="legal-modal-card">
+        <p class="eyebrow">BEFORE YOU BEGIN</p>
+        <h1 id="legal-modal-title">A quick legal notice</h1>
+        <div id="legal-modal-copy">
+          <p>DebtShark is an educational, planning, and record-keeping tool. It is not a law firm and does not provide legal, financial, or tax advice.</p>
+          <ul>
+            <li>It does not determine your legal rights, calculate legal deadlines, submit filings, or guarantee an outcome.</li>
+            <li>You are responsible for checking your information and meeting any deadline in a notice or court document.</li>
+            <li>If you receive court papers or face an urgent deadline, consider contacting a qualified lawyer or legal-aid organization promptly.</li>
+          </ul>
+          <p>Using DebtShark does not create an attorney-client relationship.</p>
+        </div>
+        <p class="legal-consent-note" id="legal-consent-note" aria-live="polite">Your agreement is stored only in this browser, so we do not show this notice every visit.</p>
+        <div class="legal-modal-actions">
+          <button class="button secondary" type="button" id="legal-decline">I do not agree</button>
+          <button class="button primary" type="button" id="legal-accept">I understand and agree <span>→</span></button>
+        </div>
+      </section>
+    </div>
+    <template id="flag-template"><article class="flag"><div class="flag-icon">!</div><div><p class="flag-title"></p><p class="flag-copy"></p></div><span class="flag-level"></span></article></template>
+    <script>
+      const legalConsentKey = 'debtshark-legal-consent-v1';
+      const legalModal = document.getElementById('legal-modal');
+      const legalAccept = document.getElementById('legal-accept');
+      const legalDecline = document.getElementById('legal-decline');
+      const legalConsentNote = document.getElementById('legal-consent-note');
+      const openLegalModal = () => {
+        legalModal.hidden = false;
+        document.body.classList.add('consent-required');
+        window.setTimeout(() => legalAccept.focus(), 0);
+      };
+      if (localStorage.getItem(legalConsentKey) !== 'accepted') openLegalModal();
+      legalAccept.addEventListener('click', () => {
+        localStorage.setItem(legalConsentKey, 'accepted');
+        legalModal.hidden = true;
+        document.body.classList.remove('consent-required');
+      });
+      legalDecline.addEventListener('click', () => {
+        legalConsentNote.textContent = 'DebtShark remains unavailable until you agree to this notice.';
+        legalAccept.focus();
+      });
+    </script>
+    <script>
+      const rightsDisclosureMedia = window.matchMedia('(max-width: 640px)');
+      const syncRightsDisclosures = () => document.querySelectorAll('[data-rights-disclosure]').forEach((disclosure) => {
+        disclosure.open = !rightsDisclosureMedia.matches;
+      });
+      syncRightsDisclosures();
+      rightsDisclosureMedia.addEventListener('change', syncRightsDisclosures);
+    </script>
+    <script src="./app.js"></script>
+    <script>
+      let deferredInstallPrompt;
+      const installButton = document.getElementById('install-app');
+      window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        installButton.hidden = false;
+      });
+      installButton.addEventListener('click', async () => {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        installButton.hidden = true;
+      });
+      window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        installButton.hidden = true;
+      });
+    </script>
+    <script>
+      const analyzeWithFee = analyze;
+      analyze = function () {
+        const result = analyzeWithFee();
+        document.getElementById('fee-paid').textContent = format(result.v.fees);
+        return result;
+      };
+      analyze();
+    </script>
+    <script>
+      const comparisonToggle = document.getElementById('toggle-comparison');
+      const comparisonBody = document.getElementById('comparison-body');
+      comparisonToggle.addEventListener('click', () => {
+        const opening = comparisonBody.hidden;
+        comparisonBody.hidden = !opening;
+        comparisonToggle.innerHTML = opening ? 'Hide comparison <span>−</span>' : 'Add comparison offer <span>+</span>';
+        if (opening) compare();
+      });
+    </script>
+    <script>
+      const updateSliderLabels = () => {
+        document.querySelectorAll('#loan-form input[type="range"]').forEach((input) => {
+          const progress = ((Number(input.value) - Number(input.min)) / (Number(input.max) - Number(input.min))) * 100;
+          input.style.setProperty('--range-progress', `${progress}%`);
+        });
+        document.getElementById('amount-value').textContent = format(Number(document.getElementById('amount').value));
+        document.getElementById('term-value').textContent = `${document.getElementById('term').value} months`;
+        document.getElementById('apr-value').textContent = `${Number(document.getElementById('apr').value).toFixed(2)}%`;
+        document.getElementById('fees-value').textContent = format(Number(document.getElementById('fees').value));
+      };
+      document.querySelectorAll('#loan-form input[type="range"]').forEach((input) => input.addEventListener('input', () => {
+        updateSliderLabels();
+        analyze();
+      }));
+      const analyzeWithSliders = analyze;
+      analyze = function () {
+        const result = analyzeWithSliders();
+        updateSliderLabels();
+        return result;
+      };
+      analyze();
+    </script>
+    <script>
+      const money = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Math.max(0, value || 0));
+      const servicingFields = ['servicing-balance', 'servicing-apr', 'servicing-payment', 'servicing-due'].map(id => document.getElementById(id));
+      const dueInput = document.getElementById('servicing-due');
+      if (!dueInput.value) { const due = new Date(); due.setDate(due.getDate() + 14); dueInput.value = due.toISOString().slice(0, 10); }
+      function updateServicing() {
+        const balance = Number(document.getElementById('servicing-balance').value) || 0;
+        const apr = Number(document.getElementById('servicing-apr').value) || 0;
+        const payment = Number(document.getElementById('servicing-payment').value) || 0;
+        const rate = apr / 1200;
+        const months = payment > balance * rate ? Math.max(1, Math.ceil(rate ? Math.log(payment / (payment - balance * rate)) / Math.log(1 + rate) : balance / payment)) : 0;
+        const payoff = new Date(); payoff.setMonth(payoff.getMonth() + months);
+        document.getElementById('payoff-months').textContent = months || '—';
+        document.getElementById('payoff-date').textContent = months ? payoff.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Increase payment';
+        document.getElementById('remaining-interest').textContent = months ? money((payment * months) - balance) : '—';
+        document.getElementById('balance-caption').textContent = money(balance);
+        document.getElementById('balance-fill').style.width = `${Math.min(100, (balance / 12500) * 100)}%`;
+        const dueText = dueInput.value ? new Date(`${dueInput.value}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Set a due date';
+        document.getElementById('next-due-label').textContent = `Next payment: ${money(payment)}`;
+        document.getElementById('next-due-detail').textContent = dueInput.value ? `Due ${dueText}. Save a confirmation after paying.` : 'Set a due date to start your repayment plan.';
+      }
+      servicingFields.forEach(field => field.addEventListener('input', updateServicing));
+      document.getElementById('mark-payment').addEventListener('click', () => { document.getElementById('next-due-detail').textContent = 'Payment recorded. Set your next due date when it is available.'; });
+      updateServicing();
+
+      const readLocalJson = (key, fallback) => {
+        try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+        catch { return fallback; }
+      };
+      const loadEvents = () => { const value = readLocalJson('bps-servicing-events', []); return Array.isArray(value) ? value : []; };
+      const loadFollowup = () => { const value = readLocalJson('bps-timeline-followup', {}); return value && typeof value === 'object' && !Array.isArray(value) ? value : {}; };
+      const eventCategory = (type = '') => {
+        if (/payment/i.test(type)) return 'Payment';
+        if (/message|contact/i.test(type)) return 'Message';
+        if (/fee|charge/i.test(type)) return 'Fee';
+        if (/document/i.test(type)) return 'Document';
+        if (/rate|term|loan change/i.test(type)) return 'Loan change';
+        return type || 'Other';
+      };
+      let activeEventFilter = 'all';
+      const displayDate = value => value ? new Date(`${value}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date not set';
+      function renderTrackOverview(entries) {
+        const followup = loadFollowup();
+        const count = entries.length;
+        document.getElementById('track-event-count').textContent = `${count} ${count === 1 ? 'event' : 'events'}`;
+        document.getElementById('track-event-copy').textContent = count ? `Your timeline includes ${count} dated ${count === 1 ? 'entry' : 'entries'}.` : 'A simple, dated record can make later conversations easier.';
+        const nextTitle = document.getElementById('track-next-title');
+        const nextCopy = document.getElementById('track-next-copy');
+        if (followup.note) {
+          nextTitle.textContent = followup.note;
+          nextCopy.textContent = followup.date ? `Reminder for ${displayDate(followup.date)}. Check the original notice for any deadline.` : 'No date is set for this reminder.';
+        } else if (count) {
+          const latest = [...entries].sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0];
+          nextTitle.textContent = `Latest record: ${eventCategory(latest.type)}.`;
+          nextCopy.textContent = `Recorded ${displayDate(latest.date)}. Add a reminder only if you want one.`;
+        } else {
+          nextTitle.textContent = 'Nothing needs attention yet.';
+          nextCopy.textContent = 'Add an event when something happens, or save an optional reminder for yourself.';
+        }
+      }
+      function renderEvents() {
+        const entries = loadEvents();
+        const visibleEntries = activeEventFilter === 'all' ? entries : entries.filter(entry => eventCategory(entry.type) === activeEventFilter);
+        const list = document.getElementById('event-list');
+        list.innerHTML = '';
+        if (!visibleEntries.length) {
+          const empty = document.createElement('p');
+          empty.className = 'event-empty';
+          empty.textContent = entries.length ? `No ${activeEventFilter.toLowerCase()} events logged yet.` : 'No events logged yet. Add only what you want to remember.';
+          list.append(empty);
+        }
+        visibleEntries.forEach((entry) => {
+          const item = document.createElement('article'); item.className = 'event-item';
+          const date = document.createElement('span'); date.className = 'event-date'; date.textContent = displayDate(entry.date);
+          const copy = document.createElement('div');
+          const type = document.createElement('p'); type.className = 'event-type'; type.textContent = eventCategory(entry.type);
+          const note = document.createElement('p'); note.className = 'event-note'; note.textContent = entry.note;
+          copy.append(type, note);
+          if (entry.reference) { const reference = document.createElement('small'); reference.className = 'event-reference'; reference.textContent = entry.reference; copy.append(reference); }
+          item.append(date, copy); list.append(item);
+        });
+        document.querySelectorAll('[data-event-filter]').forEach(button => {
+          const isActive = button.dataset.eventFilter === activeEventFilter;
+          button.classList.toggle('active', isActive);
+          button.setAttribute('aria-pressed', String(isActive));
+        });
+        renderTrackOverview(entries);
+      }
+      const syncEventTypeButtons = () => document.querySelectorAll('[data-event-type]').forEach(button => {
+        const isSelected = button.dataset.eventType === document.getElementById('event-type').value;
+        button.classList.toggle('active', isSelected);
+        button.setAttribute('aria-pressed', String(isSelected));
+      });
+      document.querySelectorAll('[data-event-type]').forEach(button => button.addEventListener('click', () => { document.getElementById('event-type').value = button.dataset.eventType; syncEventTypeButtons(); document.getElementById('event-note').focus(); }));
+      document.getElementById('event-type').addEventListener('change', syncEventTypeButtons);
+      document.querySelectorAll('[data-event-filter]').forEach(button => button.addEventListener('click', () => { activeEventFilter = button.dataset.eventFilter; renderEvents(); }));
+      document.getElementById('event-date').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('event-form').addEventListener('submit', event => { event.preventDefault(); const date = document.getElementById('event-date').value || new Date().toISOString().slice(0, 10); const note = document.getElementById('event-note').value.trim(); if (!note) return; const entries = loadEvents(); entries.unshift({ type: document.getElementById('event-type').value, date, note, reference: document.getElementById('event-reference').value.trim() }); localStorage.setItem('bps-servicing-events', JSON.stringify(entries)); event.currentTarget.reset(); document.getElementById('event-date').value = new Date().toISOString().slice(0, 10); activeEventFilter = 'all'; syncEventTypeButtons(); renderEvents(); });
+      document.getElementById('followup-form').addEventListener('submit', event => { event.preventDefault(); const note = document.getElementById('followup-note').value.trim(); if (!note) return; localStorage.setItem('bps-timeline-followup', JSON.stringify({ note, date: document.getElementById('followup-date').value })); renderEvents(); });
+      document.getElementById('clear-events').addEventListener('click', () => {
+        if (!confirm('Clear all timeline events and the optional reminder from this device?')) return;
+        localStorage.removeItem('bps-servicing-events');
+        localStorage.removeItem('bps-timeline-followup');
+        document.getElementById('followup-form').reset();
+        activeEventFilter = 'all';
+        renderEvents();
+      });
+      const storedFollowup = loadFollowup(); document.getElementById('followup-note').value = storedFollowup.note || ''; document.getElementById('followup-date').value = storedFollowup.date || '';
+      syncEventTypeButtons();
+      renderEvents();
+
+      const resolveCaseKey = 'bps-resolve-case';
+      const resolveListKeys = { evidence: 'bps-resolve-evidence', contacts: 'bps-resolve-contacts', deadlines: 'bps-resolve-deadlines' };
+      const resolveCaseFields = ['case-issue', 'case-company', 'case-reference', 'case-outcome', 'concern-note'];
+      const readResolveCase = () => { const value = readLocalJson(resolveCaseKey, {}); return value && typeof value === 'object' && !Array.isArray(value) ? value : {}; };
+      const writeResolveCase = () => localStorage.setItem(resolveCaseKey, JSON.stringify(Object.fromEntries(resolveCaseFields.map((id) => [id, document.getElementById(id).value]))));
+      const readResolveList = key => { const value = readLocalJson(key, []); return Array.isArray(value) ? value : []; };
+      const writeResolveList = (key, items) => localStorage.setItem(key, JSON.stringify(items));
+      const shortDate = value => value ? new Date(`${value}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No date entered';
+      const textLine = (...values) => values.filter(Boolean).join(' · ');
+      const renderResolveList = (listId, items, emptyText, getEntry) => {
+        const list = document.getElementById(listId);
+        list.replaceChildren();
+        if (!items.length) { const empty = document.createElement('p'); empty.className = 'resolve-empty'; empty.textContent = emptyText; list.append(empty); return; }
+        items.forEach((item, index) => {
+          const row = document.createElement('article'); row.className = 'resolve-entry';
+          const copy = document.createElement('div'); const title = document.createElement('strong'); const detail = document.createElement('small');
+          const entry = getEntry(item); title.textContent = entry.title; detail.textContent = entry.detail; copy.append(title, detail);
+          const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove'; remove.addEventListener('click', () => { items.splice(index, 1); writeResolveList(entry.key, items); renderResolveWorkspace(); });
+          row.append(copy, remove); list.append(row);
+        });
+      };
+      const daysFromToday = value => Math.ceil((new Date(`${value}T12:00:00`) - new Date(new Date().toDateString())) / 86400000);
+      const renderResolveWorkspace = () => {
+        const evidence = readResolveList(resolveListKeys.evidence);
+        const contacts = readResolveList(resolveListKeys.contacts);
+        const deadlines = readResolveList(resolveListKeys.deadlines).sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
+        renderResolveList('evidence-list', evidence, 'No document references added yet.', item => ({ key: resolveListKeys.evidence, title: item.name, detail: textLine(item.source, shortDate(item.date)) }));
+        renderResolveList('contact-list', contacts, 'No contacts logged yet.', item => ({ key: resolveListKeys.contacts, title: `${shortDate(item.date)} · ${item.method}`, detail: textLine(item.person, item.note) }));
+        renderResolveList('deadline-list', deadlines, 'No dates added yet.', item => { const days = item.date ? daysFromToday(item.date) : null; const timing = days === null ? '' : days < 0 ? `${Math.abs(days)} days ago` : days === 0 ? 'Today' : `In ${days} days`; return { key: resolveListKeys.deadlines, title: item.title, detail: textLine(shortDate(item.date), timing) }; });
+      };
+      const savedResolveCase = readResolveCase();
+      resolveCaseFields.forEach((id) => { if (savedResolveCase[id] !== undefined) document.getElementById(id).value = savedResolveCase[id]; document.getElementById(id).addEventListener('input', writeResolveCase); document.getElementById(id).addEventListener('change', writeResolveCase); });
+      document.getElementById('case-setup-form').addEventListener('submit', event => event.preventDefault());
+      document.getElementById('evidence-form').addEventListener('submit', event => { event.preventDefault(); const name = document.getElementById('evidence-name').value.trim(); if (!name) return; const items = readResolveList(resolveListKeys.evidence); items.unshift({ name, source: document.getElementById('evidence-source').value.trim(), date: document.getElementById('evidence-date').value }); writeResolveList(resolveListKeys.evidence, items); event.currentTarget.reset(); renderResolveWorkspace(); });
+      document.getElementById('contact-form').addEventListener('submit', event => { event.preventDefault(); const note = document.getElementById('contact-note').value.trim(); if (!note) return; const items = readResolveList(resolveListKeys.contacts); items.unshift({ date: document.getElementById('contact-date').value || new Date().toISOString().slice(0, 10), method: document.getElementById('contact-method').value, person: document.getElementById('contact-person').value.trim(), note }); writeResolveList(resolveListKeys.contacts, items); event.currentTarget.reset(); renderResolveWorkspace(); });
+      document.getElementById('deadline-form').addEventListener('submit', event => { event.preventDefault(); const title = document.getElementById('deadline-title').value.trim(); const date = document.getElementById('deadline-date').value; if (!title || !date) return; const items = readResolveList(resolveListKeys.deadlines); items.unshift({ title, date }); writeResolveList(resolveListKeys.deadlines, items); event.currentTarget.reset(); renderResolveWorkspace(); });
+      const buildCasePacket = () => {
+        const values = readResolveCase(); const evidence = readResolveList(resolveListKeys.evidence); const contacts = readResolveList(resolveListKeys.contacts); const deadlines = readResolveList(resolveListKeys.deadlines);
+        const lines = ['DEBTSHARK CASE PACKET', `Created: ${new Date().toLocaleString()}`, '', 'CASE SETUP', `Issue: ${values['case-issue'] || 'Not entered'}`, `Company: ${values['case-company'] || 'Not entered'}`, `Account reference: ${values['case-reference'] || 'Not entered'}`, `Requested outcome: ${values['case-outcome'] || 'Not entered'}`, '', 'FACTS', values['concern-note'] || 'Not entered', '', 'DOCUMENT INVENTORY', ...(evidence.length ? evidence.map(item => `• ${item.name} — ${textLine(item.source, shortDate(item.date))}`) : ['• None entered']), '', 'CONTACT LOG', ...(contacts.length ? contacts.map(item => `• ${shortDate(item.date)} — ${item.method}${item.person ? ` with ${item.person}` : ''}: ${item.note}`) : ['• None entered']), '', 'DATES TO REMEMBER', ...(deadlines.length ? deadlines.map(item => `• ${shortDate(item.date)} — ${item.title}`) : ['• None entered']), '', 'This personal organizer does not determine legal rights or deadlines. Review for accuracy before sharing.'];
+        return lines.join('\n');
+      };
+      document.getElementById('concern-form').addEventListener('submit', event => { event.preventDefault(); const values = readResolveCase(); const note = values['concern-note']?.trim(); if (!note) return; const company = values['case-company']?.trim() || 'the company'; const issue = values['case-issue'] || 'this concern'; const outcome = values['case-outcome']?.trim() || 'a written review'; document.getElementById('summary-text').textContent = `To ${company}: I am writing about ${issue}. ${note} I am requesting ${outcome}. I have kept the relevant records and a dated communication log. Please respond in writing with your review of this concern.`; document.getElementById('summary-output').hidden = false; });
+      document.getElementById('save-case-workspace').addEventListener('click', event => { const values = readResolveCase(); saveLibraryItem({ kind: 'CASE WORKSPACE', title: values['case-company'] || 'Untitled case workspace', summary: `${values['case-issue'] || 'Concern'} · ${values['case-outcome'] || 'Outcome not entered'}`, detail: buildCasePacket() }, event.currentTarget); });
+      document.getElementById('export-case-packet').addEventListener('click', () => { const file = new Blob([buildCasePacket()], { type: 'text/plain;charset=utf-8' }); const link = document.createElement('a'); link.href = URL.createObjectURL(file); link.download = 'debtshark-case-packet.txt'; link.click(); URL.revokeObjectURL(link.href); });
+      document.getElementById('go-monitor').addEventListener('click', () => show('monitor'));
+      document.getElementById('go-protect').addEventListener('click', () => show('learning'));
+      renderResolveWorkspace();
+
+      document.getElementById('open-resolve').addEventListener('click', () => show('resolve'));
+      document.getElementById('collection-record-form').addEventListener('submit', event => {
+        event.preventDefault();
+        const company = document.getElementById('collection-company').value.trim() || 'a collector or company';
+        const rawDate = document.getElementById('collection-contact-date').value;
+        const contactDate = rawDate ? new Date(`${rawDate}T12:00:00`).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'an unspecified date';
+        const facts = document.getElementById('collection-facts').value.trim();
+        document.getElementById('collection-record-text').textContent = `On ${contactDate}, I was contacted by ${company}. I am keeping copies of the validation information, account records, payment records, and dated communications. Facts I want to preserve: ${facts || 'No additional facts entered yet.'}`;
+        document.getElementById('collection-record-output').hidden = false;
+      });
+    </script>
+    <script>
+      const savedLibraryKey = 'bps-saved-library';
+      const libraryItems = () => { const value = readLocalJson(savedLibraryKey, []); return Array.isArray(value) ? value : []; };
+      const writeLibraryItems = items => localStorage.setItem(savedLibraryKey, JSON.stringify(items));
+      const savedDate = value => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      function buttonFeedback(button, savedLabel = 'Saved to this device') {
+        const original = button.innerHTML;
+        button.innerHTML = `${savedLabel} <span>✓</span>`;
+        setTimeout(() => { button.innerHTML = original; }, 1800);
+      }
+
+      function saveLibraryItem(item, button) {
+        const items = libraryItems();
+        items.unshift({ ...item, id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, date: Date.now() });
+        writeLibraryItems(items);
+        renderSaved();
+        if (button) buttonFeedback(button);
+      }
+
+      function makeSavedItem({ date, kind, title, summary, detail, onOpen, onDelete }) {
+        const card = document.createElement('article');
+        card.className = 'saved-item saved-library-item';
+        const dateNode = document.createElement('span');
+        dateNode.className = 'saved-date';
+        dateNode.textContent = savedDate(date);
+        const copy = document.createElement('div');
+        const kindNode = document.createElement('p');
+        kindNode.className = 'saved-kind';
+        kindNode.textContent = kind;
+        const titleNode = document.createElement('strong');
+        titleNode.textContent = title;
+        const summaryNode = document.createElement('small');
+        summaryNode.textContent = summary;
+        copy.append(kindNode, titleNode, summaryNode);
+        const actions = document.createElement('div');
+        actions.className = 'saved-meta';
+        if (detail) {
+          const view = document.createElement('button');
+          view.type = 'button';
+          view.textContent = 'View';
+          const details = document.createElement('p');
+          details.className = 'saved-detail';
+          details.hidden = true;
+          details.textContent = detail;
+          view.addEventListener('click', () => { details.hidden = !details.hidden; view.textContent = details.hidden ? 'View' : 'Hide'; });
+          copy.append(details);
+          actions.append(view);
+        }
+        if (onOpen) {
+          const open = document.createElement('button');
+          open.type = 'button';
+          open.textContent = 'Open';
+          open.addEventListener('click', onOpen);
+          actions.append(open);
+        }
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'delete-save';
+        remove.textContent = 'Delete';
+        remove.addEventListener('click', onDelete);
+        actions.append(remove);
+        card.append(dateNode, copy, actions);
+        return card;
+      }
+
+      renderSaved = function () {
+        const list = document.getElementById('saved-list');
+        const analyses = saved();
+        const records = libraryItems();
+        const savedCount = document.getElementById('saved-count');
+        savedCount.textContent = analyses.length + records.length;
+        list.replaceChildren();
+        if (!analyses.length && !records.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty-state';
+          empty.innerHTML = '<strong>No records saved yet.</strong><br>Use a Save button anywhere in the suite to keep a snapshot on this device.';
+          list.append(empty);
+          return;
+        }
+        const entries = analyses.map((entry, index) => ({ type: 'analysis', entry, index, date: entry.date })).concat(records.map((entry, index) => ({ type: 'record', entry, index, date: entry.date }))).sort((a, b) => b.date - a.date);
+        entries.forEach(item => {
+          if (item.type === 'analysis') {
+            const analysis = item.entry;
+            const comparisonNote = analysis.comparison ? ` · Compared with ${format(analysis.comparison.amount)} at ${analysis.comparison.apr.toFixed(2)}% APR` : '';
+            list.append(makeSavedItem({
+              date: analysis.date,
+              kind: 'OFFER ANALYSIS',
+              title: `${format(analysis.v.amount)} loan offer`,
+              summary: `${analysis.v.apr.toFixed(2)}% APR · ${analysis.v.term} months · ${format(analysis.c.payment)}/mo${comparisonNote}`,
+              onOpen: () => {
+                ['amount', 'apr', 'term', 'fees'].forEach(key => document.getElementById(key).value = analysis.v[key]);
+                document.getElementById('refinance').checked = analysis.v.refinance;
+                document.getElementById('balloon').checked = analysis.v.balloon;
+                document.getElementById('auto-pay').checked = analysis.v.auto;
+                if (analysis.comparison) {
+                  document.getElementById('alt-amount').value = analysis.comparison.amount;
+                  document.getElementById('alt-apr').value = analysis.comparison.apr;
+                  document.getElementById('alt-term').value = analysis.comparison.term;
+                  const panel = document.getElementById('comparison-body');
+                  panel.hidden = false;
+                  document.getElementById('toggle-comparison').innerHTML = 'Hide comparison <span>−</span>';
+                }
+                analyze();
+                if (analysis.comparison) compare();
+                show('analyzer');
+              },
+              onDelete: () => { const updated = saved(); updated.splice(item.index, 1); localStorage.setItem('bps-analyses', JSON.stringify(updated)); renderSaved(); }
+            }));
+          } else {
+            const record = item.entry;
+            list.append(makeSavedItem({
+              date: record.date,
+              kind: record.kind,
+              title: record.title,
+              summary: record.summary,
+              detail: record.detail,
+              onOpen: record.kind === 'SERVICING TIMELINE' ? () => {
+                localStorage.setItem('bps-servicing-events', JSON.stringify(record.payload?.events || []));
+                localStorage.setItem('bps-timeline-followup', JSON.stringify(record.payload?.followup || {}));
+                const restoredFollowup = loadFollowup();
+                document.getElementById('followup-note').value = restoredFollowup.note || '';
+                document.getElementById('followup-date').value = restoredFollowup.date || '';
+                activeEventFilter = 'all';
+                renderEvents();
+                show('monitor');
+              } : record.payload?.view === 'manage' ? () => {
+                ['balance', 'apr', 'payment', 'due'].forEach(key => document.getElementById(`servicing-${key}`).value = record.payload[key]);
+                updateServicing();
+                show('manage');
+              } : null,
+              onDelete: () => { const updated = libraryItems(); updated.splice(item.index, 1); writeLibraryItems(updated); renderSaved(); }
+            }));
+          }
+        });
+      };
+
+      document.getElementById('save-analysis').onclick = () => {
+        const result = analyze();
+        const panel = document.getElementById('comparison-body');
+        const comparison = panel.hidden ? null : { amount: Number(document.getElementById('alt-amount').value) || 0, apr: Number(document.getElementById('alt-apr').value) || 0, term: Number(document.getElementById('alt-term').value) || 0 };
+        const analyses = saved();
+        analyses.unshift({ ...result, comparison, date: Date.now() });
+        localStorage.setItem('bps-analyses', JSON.stringify(analyses));
+        renderSaved();
+        buttonFeedback(document.getElementById('save-analysis'));
+      };
+
+      document.getElementById('save-repayment').addEventListener('click', event => {
+        const balance = Number(document.getElementById('servicing-balance').value) || 0;
+        const apr = Number(document.getElementById('servicing-apr').value) || 0;
+        const payment = Number(document.getElementById('servicing-payment').value) || 0;
+        const due = document.getElementById('servicing-due').value;
+        saveLibraryItem({ kind: 'REPAYMENT PLAN', title: 'Repayment snapshot', summary: `${money(balance)} balance · ${apr.toFixed(2)}% APR · ${money(payment)}/mo`, detail: `Next due: ${due ? new Date(`${due}T12:00:00`).toLocaleDateString() : 'Not set'} · Projected payoff: ${document.getElementById('payoff-date').textContent} · Estimated interest left: ${document.getElementById('remaining-interest').textContent}`, payload: { view: 'manage', balance, apr, payment, due } }, event.currentTarget);
+      });
+
+      document.getElementById('save-timeline').addEventListener('click', event => {
+        const events = loadEvents();
+        if (!events.length) { buttonFeedback(event.currentTarget, 'Add an event first'); return; }
+        const followup = loadFollowup();
+        const reminder = followup.note ? `REMINDER\n${followup.date ? `${displayDate(followup.date)} — ` : ''}${followup.note}\n\n` : '';
+        const details = reminder + events.map(entry => `${displayDate(entry.date)} — ${eventCategory(entry.type)}: ${entry.note}${entry.reference ? ` (${entry.reference})` : ''}`).join('\n');
+        saveLibraryItem({ kind: 'SERVICING TIMELINE', title: `${events.length} saved servicing ${events.length === 1 ? 'event' : 'events'}`, summary: 'A point-in-time copy of your timeline.', detail: details, payload: { events, followup } }, event.currentTarget);
+      });
+
+      document.getElementById('save-summary').addEventListener('click', event => {
+        const text = document.getElementById('summary-text').textContent.trim();
+        if (!text) return;
+        saveLibraryItem({ kind: 'CONCERN SUMMARY', title: 'Factual concern summary', summary: text.slice(0, 140), detail: text }, event.currentTarget);
+      });
+
+      document.getElementById('save-collection-record').addEventListener('click', event => {
+        const text = document.getElementById('collection-record-text').textContent.trim();
+        if (!text) return;
+        saveLibraryItem({ kind: 'COLLECTION RECORD', title: 'Factual collection record', summary: text.slice(0, 140), detail: text }, event.currentTarget);
+      });
+
+      document.getElementById('clear-data').onclick = () => {
+        if (confirm('Delete all saved records, timeline entries, reminders, and case workspace data from this device?')) {
+          localStorage.removeItem('bps-analyses');
+          localStorage.removeItem(savedLibraryKey);
+          localStorage.removeItem('bps-servicing-events');
+          localStorage.removeItem('bps-timeline-followup');
+          localStorage.removeItem(resolveCaseKey);
+          Object.values(resolveListKeys).forEach(key => localStorage.removeItem(key));
+          document.getElementById('event-form').reset();
+          document.getElementById('event-date').value = new Date().toISOString().slice(0, 10);
+          syncEventTypeButtons();
+          document.getElementById('followup-form').reset();
+          document.getElementById('case-setup-form').reset();
+          document.getElementById('concern-form').reset();
+          renderEvents();
+          renderResolveWorkspace();
+          renderSaved();
+        }
+      };
+      renderSaved();
+    </script>
+    <script>
+      const rightsLayoutMedia = window.matchMedia('(max-width: 640px)');
+      const learningView = document.getElementById('learning');
+      const rightsSections = [
+        { section: learningView.querySelector('.collections-workspace'), slot: document.getElementById('collections-detail-slot') }
+      ].map((entry) => ({ ...entry, marker: document.createComment('rights-section-position') }));
+      rightsSections.forEach(({ section, marker }) => section.parentNode.insertBefore(marker, section));
+      const updateRightsLayout = () => rightsSections.forEach(({ section, slot, marker }) => {
+        if (rightsLayoutMedia.matches) {
+          slot.append(section);
+          section.querySelectorAll('[data-rights-disclosure]').forEach((disclosure) => { disclosure.open = true; });
+        } else {
+          marker.parentNode.insertBefore(section, marker.nextSibling);
+        }
+      });
+      document.querySelectorAll('[data-rights-detail]').forEach((button) => button.addEventListener('click', () => show(button.dataset.rightsDetail)));
+      document.querySelectorAll('[data-rights-back]').forEach((button) => button.addEventListener('click', () => show('learning')));
+      updateRightsLayout();
+      rightsLayoutMedia.addEventListener('change', updateRightsLayout);
+    </script>
+  </body>
+</html>
