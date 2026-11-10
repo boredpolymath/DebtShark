@@ -1,0 +1,6 @@
+# The application is intentionally shipped as a static site in dist/.  Keep its
+# source files in GitHub Linguist's language statistics rather than treating
+# that publish directory as generated or vendored output.
+dist/*.js linguist-detectable=true -linguist-generated -linguist-vendored
+dist/*.css linguist-detectable=true -linguist-generated -linguist-vendored
+dist/*.html linguist-detectable=true -linguist-generated -linguist-vendored
