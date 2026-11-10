@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
+  <title id="title">DebtShark</title>
+  <desc id="description">A private debt organizer for seeing the full picture before, during, and after a loan.</desc>
+  <defs>
+    <linearGradient id="surface" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f3838"/><stop offset="1" stop-color="#082b2c"/></linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#30bdb4"/><stop offset="1" stop-color="#168a8a"/></linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#surface)"/>
+  <circle cx="1110" cy="118" r="260" fill="#168a8a" opacity=".12"/><circle cx="123" cy="646" r="250" fill="#30bdb4" opacity=".08"/>
+  <rect x="94" y="112" width="150" height="150" rx="28" fill="#143f3f" stroke="#416362" stroke-width="2"/>
+  <path d="M132 155h62c17 0 31 14 31 31v34c-30 3-58 19-78 44l-34-34c14-13 22-31 22-50 0-9-2-17-5-25Z" fill="#eaf1f0"/>
+  <path d="M119 238l34 34c24-27 50-45 83-55-45 17-78 45-103 83l-38-39Z" fill="url(#mark)"/>
+  <text x="94" y="382" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="700" letter-spacing="-4">DebtShark</text>
+  <text x="100" y="454" fill="#c9d9d7" font-family="Arial, Helvetica, sans-serif" font-size="31">Your private organizer for every stage of debt.</text>
+  <line x1="100" y1="505" x2="1180" y2="505" stroke="#416362" stroke-width="2"/>
+  <text x="100" y="557" fill="#30bdb4" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" letter-spacing="2">REVIEW  ·  REPAY  ·  TRACK  ·  RESOLVE  ·  PROTECT</text>
+  <text x="100" y="595" fill="#c9d9d7" font-family="Arial, Helvetica, sans-serif" font-size="18">Local-only · No accounts · No tracking</text>
+</svg>
