@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://boredpolymath.github.io/DebtShark/"><img src="./docs/debtshark-thumbnail.png" alt="DebtShark — your private debt organizer" width="100%" /></a>
+  <a href="https://boredpolymath.github.io/DebtShark/"><img src="https://raw.githubusercontent.com/boredpolymath/DebtShark/c05120f294e968e4e31aeaf39268fd136f48e230/docs/debtshark-thumbnail.png" alt="DebtShark — your private debt organizer" width="100%" /></a>
 </p>
 
 <h1 align="center">DebtShark</h1>
