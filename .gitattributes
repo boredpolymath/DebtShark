@@ -1,6 +1,0 @@
-# The app is intentionally shipped as a static site in dist/.
-# Count its JavaScript runtime without treating dist/ as generated or vendored.
-dist/** -linguist-generated -linguist-vendored
-dist/*.js linguist-detectable
-dist/*.css -linguist-detectable
-dist/*.html -linguist-detectable
