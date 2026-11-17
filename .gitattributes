@@ -1,3 +1,7 @@
 # This local-first application ships its authored HTML, CSS, and JavaScript in dist/.
-# Keep those files in GitHub Linguist's language totals rather than treating them as generated output.
-dist/** linguist-generated=false
+# Include those files in GitHub Linguist's language totals. `dist/` is published
+# source here, not a generated, vendored, or documentation-only artifact.
+dist/** -linguist-generated
+dist/** -linguist-vendored
+dist/** -linguist-documentation
+dist/** linguist-detectable
